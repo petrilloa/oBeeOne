@@ -1,14 +1,14 @@
 
 #include "ThingSpeak.h"
 #include "oBee.h"
-#include "spark-dallas-temperature.h"
-#include "OneWire.h"
-#include "DroneTemperature.h"
-#include "oBeeSound.h"
-#include "Worker.h"
-#include "DroneSwitch.h"
-#include "Drone.h"
-#include "oBeeRGB.h"
+//#include "spark-dallas-temperature.h"
+//#include "OneWire.h"
+//#include "DroneTemperature.h"
+//#include "oBeeSound.h"
+//#include "Worker.h"
+//#include "DroneSwitch.h"
+//#include "Drone.h"
+//#include "oBeeRGB.h"
 
 oBee oBeeOne;
 /* Thingspeak */
@@ -36,12 +36,12 @@ void setup() {
     //oBeeOne.SetUpDrone("ID:02-TYPE:SW-PIN1:A21-PIN2:000-BZZR:4-RGB:4-TIMER:20000-FIELDID:5-FIELDNAME:BigButton-MODE:P-WID:02-WTIMER:3000");
 
     //Temperature
-    //oBeeOne.SetUpDrone("ID:01-TYPE:TEMP-PIN1:D11-PIN2:000-BZZR:0-RGB:0:TIMER:000-FIELDID:2-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:000");
+    oBeeOne.SetUpDrone("ID:01-TYPE:TEMP-PIN1:D11-PIN2:000-BZZR:0-RGB:0:TIMER:000-FIELDID:2-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:000");
 
     //Presence
     oBeeOne.SetUpDrone("ID:01-TYPE:DIGITAL-PIN1:D32-PIN2:000-BZZR:0-RGB:1:TIMER:000-FIELDID:3-FIELDNAME:Presence-MODE:P-WID:00-WTIMER:000");
     //Light
-    //oBeeOne.SetUpDrone("ID:02-TYPE:DIGITAL-PIN1:A22-PIN2:000-BZZR:0-RGB:0:TIMER:000-FIELDID:4-FIELDNAME:Light-MODE:T-WID:00-WTIMER:000");
+    oBeeOne.SetUpDrone("ID:02-TYPE:DIGITAL-PIN1:A22-PIN2:000-BZZR:0-RGB:0:TIMER:000-FIELDID:4-FIELDNAME:Light-MODE:T-WID:00-WTIMER:000");
 
     oBeeOne.SetUpWorker("ID:01-PIN:A11-BZZR:0-RGB:0-TYPE:A-TIMER:5000");
     oBeeOne.SetUpWorker("ID:02-PIN:A12-BZZR:0-RGB:0-TYPE:A-TIMER:5000");
@@ -55,6 +55,7 @@ void setup() {
 }
 
 /*Public Function Particle API */
+/*******************************/
 int TriggerRGBNotification(String command)
 {
   oBeeOne.RGBNotification(command.toInt());
@@ -79,7 +80,10 @@ int SetupWorker(String command)
   return 1;
 }
 
+/*******************************/
 
+/*********Main loop ************/
+/*******************************/
 void loop() {
 
     //delay(50);
@@ -87,135 +91,121 @@ void loop() {
 
     oBeeOne.Update();
 
-    sensor oSensor;
-    sensor_event oEvent;
+    HandleDroneSwitch();
+    HandleDroneDigital();
 
-    oBeeOne.droneSwitch1.GetSensor(&oSensor);
-    oBeeOne.droneSwitch1.GetEvent(&oEvent);
-
-    oBeeOne.HandleWorker(oSensor, oEvent);
-    oBeeOne.HandleNotification(oSensor, oEvent);
-
-    GetPublishValuesSwitch1(oSensor.fieldID);
-
-    //oBeeOne.droneSwitch2.GetSensor(&oSensor);
-    //oBeeOne.droneSwitch2.GetEvent(&oEvent);
-
-    //oBeeOne.HandleWorker(oSensor, oEvent);
-    //oBeeOne.HandleNotification(oSensor, oEvent);
-
-    //GetPublishValuesSwitch2(oSensor.fieldID, oSensor.fieldName);
-
-    //TODO: DEfinir que sensore van en tiempo real y cuales no
-    if(ms - msLast > publishTime)
-    {
-    //oBeeOne.droneTemperature1.GetSensor(&oSensor);
-    //oBeeOne.droneTemperature1.GetEvent(&oEvent);
-
-
-    //oBeeOne.HandleWorker(oSensor, oEvent);
-    //oBeeOne.HandleNotification(oSensor, oEvent);
-
-    //GetPublishValuesTemp1(oSensor.fieldID, oSensor.fieldName);
-
-    }
-
-    oBeeOne.droneDigital1.GetSensor(&oSensor);
-    oBeeOne.droneDigital1.GetEvent(&oEvent);
-
-    oBeeOne.HandleWorker(oSensor, oEvent);
-    oBeeOne.HandleNotification(oSensor, oEvent);
-
-    GetPublishValuesDigital1(oSensor.fieldID);
-
-    //oBeeOne.droneDigital2.GetSensor(&oSensor);
-    //oBeeOne.droneDigital2.GetEvent(&oEvent);
-
-    //oBeeOne.HandleWorker(oSensor, oEvent);
-    //oBeeOne.HandleNotification(oSensor, oEvent);
-
-    //GetPublishValuesDigital2(oSensor.fieldID, oSensor.fieldName);
-
+    //Publish to the cloud
     Publish();
 }
+/*******************************/
 
-void GetPublishValuesSwitch1(int fieldID)
+void HandleDroneSwitch()
 {
+  sensor oSensor;
+  sensor_event oEvent;
+
+  int listSize = oBeeOne.droneSwitchList.size();
+
+  for (int h = 0; h < listSize; h++)
+  {
+  DroneSwitch *droneSwitch;
+
+  droneSwitch = oBeeOne.droneSwitchList.get(h);
+
+  droneSwitch->GetSensor(&oSensor);
+  droneSwitch->GetEvent(&oEvent);
+
+  oBeeOne.HandleWorker(oSensor, oEvent);
+  oBeeOne.HandleNotification(oSensor, oEvent);
+
+  //IF Publish time
     if(ms - msLast > publishTime)
     {
         sensor_event oEvent;
-        oBeeOne.droneSwitch1.Publish(&oEvent);
+        droneSwitch->Publish(&oEvent);
 
         //GetValue
         //Serial.println("SetField: " + String(oEvent.value));
-        ThingSpeak.setField(fieldID,oEvent.value);
+        ThingSpeak.setField(oSensor.fieldID,oEvent.value);
 
         //Losant
         //state[fieldName] = oEvent.value;
     }
+  }
 }
 
-void GetPublishValuesSwitch2(int fieldID, String fieldName)
+void HandleDroneDigital()
 {
+  sensor oSensor;
+  sensor_event oEvent;
+
+  int listSize = oBeeOne.droneDigitalList.size();
+
+  for (int h = 0; h < listSize; h++)
+  {
+  DroneDigital *droneDigital;
+
+  droneDigital = oBeeOne.droneDigitalList.get(h);
+
+  droneDigital->GetSensor(&oSensor);
+  droneDigital->GetEvent(&oEvent);
+
+  oBeeOne.HandleWorker(oSensor, oEvent);
+  oBeeOne.HandleNotification(oSensor, oEvent);
+
+  //IF Publish time
     if(ms - msLast > publishTime)
     {
-        sensor_event oEvent;
-        oBeeOne.droneSwitch2.Publish(&oEvent);
+        droneDigital->Publish(&oEvent);
 
         //GetValue
         //Serial.println("SetField: " + String(oEvent.value));
-        ThingSpeak.setField(fieldID,oEvent.value);
+        ThingSpeak.setField(oSensor.fieldID,oEvent.value);
+
         //Losant
         //state[fieldName] = oEvent.value;
     }
+  }
 }
 
-void GetPublishValuesTemp1(int fieldID, String fieldName)
+void HandleDroneTemperature()
 {
-    if(ms - msLast > publishTime)
-    {
-        sensor_event oEvent;
-        oBeeOne.droneTemperature1.Publish(&oEvent);
+  sensor oSensor;
+  sensor_event oEvent;
 
-        //GetValue
-        Serial.println("SetField: " + String(oEvent.value));
-        Serial.println("FieldID: " + String(fieldID));
-        ThingSpeak.setField(fieldID,oEvent.value);
-        //Losant
-        //state[fieldName] = oEvent.value;
-    }
-}
+  int listSize = oBeeOne.droneTemperatureList.size();
 
-void GetPublishValuesDigital1(int fieldID)
-{
-    if(ms - msLast > publishTime)
-    {
-        sensor_event oEvent;
-        oBeeOne.droneDigital1.Publish(&oEvent);
+  for (int h = 0; h < listSize; h++)
+  {
+    //IF Publish time - FOR TEMPERATURE ONLY WHEN PUBLISH! Evitar saturar el BUS OneWIRE -
+    //Testear con varios sensores...
+      if(ms - msLast > publishTime)
+      {
+        DroneTemperature *droneTemperature;
 
-        //GetValue
-        //Serial.println("SetField: " + String(oEvent.value));
-        ThingSpeak.setField(fieldID,oEvent.value);
-        //Losant
-        //state[fieldName] = oEvent.value;
+        droneTemperature = oBeeOne.droneTemperatureList.get(h);
 
-    }
-}
+        droneTemperature->GetSensor(&oSensor);
+        droneTemperature->GetEvent(&oEvent);
 
-void GetPublishValuesDigital2(int fieldID, String fieldName)
-{
-    if(ms - msLast > publishTime)
-    {
-        sensor_event oEvent;
-        oBeeOne.droneDigital2.Publish(&oEvent);
+        oBeeOne.HandleWorker(oSensor, oEvent);
+        oBeeOne.HandleNotification(oSensor, oEvent);
+
+
+        droneTemperature->Publish(&oEvent);
 
         //GetValue
         //Serial.println("SetField: " + String(oEvent.value));
-        ThingSpeak.setField(fieldID,oEvent.value);
+        ThingSpeak.setField(oSensor.fieldID,oEvent.value);
+
         //Losant
         //state[fieldName] = oEvent.value;
-    }
+        }
+  }
 }
+
+/*********Publish to the cloud************/
+/*******************************/
 
 void Publish()
 {
