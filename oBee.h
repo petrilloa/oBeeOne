@@ -8,6 +8,8 @@
 #include "oBeeSound.h"
 #include "Worker.h"
 
+#include "LinkedList.h"
+
 #ifndef _oBee_h
 #define _oBee_h
 
@@ -43,19 +45,9 @@ class oBee
         void SetUpDroneTemperature(sensor oSensor);
         void SetUpDroneDigital(sensor oSensor);
 
-
-        DroneSwitch droneSwitch1;
-        DroneSwitch droneSwitch2;
-        DroneSwitch droneSwitch3;
-        DroneSwitch droneSwitch4;
-
-        DroneTemperature droneTemperature1;
-        DroneTemperature droneTemperature2;
-
-        DroneDigital droneDigital1;
-        DroneDigital droneDigital2;
-        DroneDigital droneDigital3;
-        DroneDigital droneDigital4;
+        LinkedList<DroneSwitch*> droneSwitchList = LinkedList<DroneSwitch*>();
+        LinkedList<DroneTemperature*> droneTemperatureList = LinkedList<DroneTemperature*>();
+        LinkedList<DroneDigital*> droneDigitalList = LinkedList<DroneDigital*>();
 
         //DronePresence;
         //DroneLight;
@@ -102,7 +94,6 @@ class oBee
 
         long msLast = 0;
 
-
     private:
 
         unsigned int _channelNumber;
@@ -111,8 +102,6 @@ class oBee
         String rgbTallBackID;
 
         OneWire oneWire;
-
-
 };
 
 #endif

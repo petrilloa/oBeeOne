@@ -99,13 +99,13 @@ float DroneDigital::read()
     static int ms;
     static int pinVal;
 
-    Serial.println("Digital: Start reading...");
+    //Serial.println("Digital: Start reading...");
 
     ms = millis();
     pinVal = digitalRead(_sensor.pin);
 
-    Serial.println("Digital: " + String(_sensor.droneID));
-    Serial.println("PINVal: " + String(pinVal));
+    //Serial.println("Digital: " + String(_sensor.droneID));
+    //Serial.println("PINVal: " + String(pinVal));
 
     if(ms-_sensor_event.lastChange < _dbTime) //if TRUE is en Debounce time
     {

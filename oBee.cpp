@@ -161,74 +161,26 @@ void oBee::SetUpDrone(String str)
 
 void oBee::SetUpDroneSwitch(sensor oSensor)
 {
-    DroneSwitch droneSwitch;
-
-    Serial.println("SetUpDroneSwitch: " + String(oSensor.droneID));
-
-    droneSwitch.SetUpSensor(oSensor);
-
-    switch (oSensor.droneID)
-    {
-        case 1:
-            droneSwitch1 = droneSwitch;
-            break;
-        case 2:
-            droneSwitch2 = droneSwitch;
-            break;
-        case 3:
-            droneSwitch3 = droneSwitch;
-            break;
-        case 4:
-            droneSwitch4 = droneSwitch;
-            break;
-    }
+    DroneSwitch *oDroneSwitch = new DroneSwitch();
+    oDroneSwitch->SetUpSensor(oSensor);
+    droneSwitchList.add(oDroneSwitch);
 }
 
 void oBee::SetUpDroneTemperature(sensor oSensor)
 {
-    DroneTemperature droneTemperature;
+    //TODO: Ver si lo dejamos aca
+    oneWire.Setup(oSensor.pin);
 
-    Serial.println("SetUpDroneTemperature_1: " + String(oSensor.droneID));
-
-    droneTemperature.SetUpSensor(oSensor, &oneWire);
-
-    Serial.println("SetUpDroneTemperature_2: " + String(oSensor.droneID));
-
-    switch (oSensor.droneID)
-    {
-        case 1:
-            droneTemperature1 = droneTemperature;
-            break;
-        case 2:
-            droneTemperature2 = droneTemperature;
-            break;
-
-    }
+    DroneTemperature *oDroneTemperature = new DroneTemperature;
+    oDroneTemperature->SetUpSensor(oSensor, &oneWire);
+    droneTemperatureList.add(oDroneTemperature);
 }
 
 void oBee::SetUpDroneDigital(sensor oSensor)
 {
-    DroneDigital droneDigital;
-
-    Serial.println("SetUpDroneDigital: " + String(oSensor.droneID));
-
-    droneDigital.SetUpSensor(oSensor);
-
-    switch (oSensor.droneID)
-    {
-        case 1:
-            droneDigital1 = droneDigital;
-            break;
-        case 2:
-            droneDigital2 = droneDigital;
-            break;
-        case 3:
-            droneDigital3 = droneDigital;
-            break;
-        case 4:
-            droneDigital4 = droneDigital;
-            break;
-    }
+  DroneDigital *oDroneDigital = new DroneDigital();
+  oDroneDigital->SetUpSensor(oSensor);
+  droneDigitalList.add(oDroneDigital);
 }
 
 int oBee::GetPinValue(String strPIN)
