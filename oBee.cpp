@@ -183,6 +183,14 @@ void oBee::SetUpDroneDigital(sensor oSensor)
   droneDigitalList.add(oDroneDigital);
 }
 
+void oBee::ClearLists()
+{
+  //Clear list to initial SetUp
+  droneSwitchList.clear();
+  droneTemperatureList.clear();
+  droneDigitalList.clear();
+}
+
 int oBee::GetPinValue(String strPIN)
 {
     int pinValue;
@@ -301,7 +309,6 @@ void oBee::HandleWorker(sensor oSensor, sensor_event oEvent)
 {
     if (oSensor.workerID != -1) //Check if has a Worker asociated
     {
-        //Serial.println("HandleWorker");
         int active = -1;
         int workerAutoOff = 0;
 

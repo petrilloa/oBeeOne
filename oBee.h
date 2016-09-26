@@ -45,6 +45,8 @@ class oBee
         void SetUpDroneTemperature(sensor oSensor);
         void SetUpDroneDigital(sensor oSensor);
 
+        void ClearLists();
+
         LinkedList<DroneSwitch*> droneSwitchList = LinkedList<DroneSwitch*>();
         LinkedList<DroneTemperature*> droneTemperatureList = LinkedList<DroneTemperature*>();
         LinkedList<DroneDigital*> droneDigitalList = LinkedList<DroneDigital*>();
