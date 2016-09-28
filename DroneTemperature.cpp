@@ -118,9 +118,9 @@ float DroneTemperature::read()
     //Serial.println("TempRead_2");
     //delay(1000);
     //TODO: Manejar el indexOf
-    temperature=dallasTemp.getTempCByIndex(_sensor.droneID-1);
+    temperature=dallasTemp.getTempCByIndex(_sensor.pin2);
 
-    //Serial.println("Temperature: " + String(temperature));
+    Serial.println("Temperature: " + String(temperature));
     return temperature;
 
 }
