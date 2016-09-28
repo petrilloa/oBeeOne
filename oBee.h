@@ -8,7 +8,7 @@
 #include "oBeeSound.h"
 #include "Worker.h"
 
-#include "LinkedList.h"
+#include <LinkedList.h>
 
 #ifndef _oBee_h
 #define _oBee_h
@@ -45,6 +45,8 @@ class oBee
         void SetUpDroneTemperature(sensor oSensor);
         void SetUpDroneDigital(sensor oSensor);
 
+        void ClearLists();
+
         LinkedList<DroneSwitch*> droneSwitchList = LinkedList<DroneSwitch*>();
         LinkedList<DroneTemperature*> droneTemperatureList = LinkedList<DroneTemperature*>();
         LinkedList<DroneDigital*> droneDigitalList = LinkedList<DroneDigital*>();
@@ -77,10 +79,8 @@ class oBee
         int GetPinValue(String strPIN);
 
         void SetUpWorker(String str);
-        Worker worker1;
-        Worker worker2;
-        Worker worker3;
-        Worker worker4;
+        LinkedList<Worker*> workerList = LinkedList<Worker*>();
+
 
         void HandleWorker(sensor oSensor, sensor_event oEvent);
         void HandleNotification(sensor oSensor, sensor_event oEvent);
