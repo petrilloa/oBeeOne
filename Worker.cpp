@@ -3,6 +3,9 @@
 void Worker::SetUpWorker()
 {
     pinMode(pin, OUTPUT);
+
+    //LOW to turn ON the RELAY
+    WorkerOFF();
 }
 
 void Worker::WorkerON()
