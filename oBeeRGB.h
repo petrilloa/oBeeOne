@@ -1,7 +1,7 @@
 /* oBeeRGB.h */
 
 // This #include statement was automatically added by the Particle IDE.
-#include "neopixel.h"
+#include <neopixel.h>
 
 #ifndef _oBeeRGB_h
 #define _oBeeRGB_h
@@ -37,7 +37,7 @@ class oBeeRGB : public Adafruit_NeoPixel
     //oBeeRGB(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)());
     oBeeRGB();
     oBeeRGB(int pixels, int pin, int type);
-  
+
     //void Init(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)());
     //void Init(uint16_t pixels, uint8_t pin, uint8_t type);
     void Update();

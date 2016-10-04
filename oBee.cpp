@@ -189,6 +189,7 @@ void oBee::ClearLists()
   droneSwitchList.clear();
   droneTemperatureList.clear();
   droneDigitalList.clear();
+  workerList.clear();
 }
 
 int oBee::GetPinValue(String strPIN)
@@ -275,127 +276,58 @@ void oBee::SetUpWorker(String str)
         wtype = WORKER_AUTO;
     }
 
-    Worker worker;
+    Worker *worker = new Worker();
 
-    worker.workerID = workerID;
-    worker.pin = pin;
+    worker->workerID = workerID;
+    worker->pin = pin;
     //worker.tallBAckID
-    worker.buzzerNotificationID = buzzerNotificationID;
-    worker.rgbNotificationID = rgbNotificationID;
-    worker.autoTimer = autoTimer;
-    worker.type = wtype;
+    worker->buzzerNotificationID = buzzerNotificationID;
+    worker->rgbNotificationID = rgbNotificationID;
+    worker->autoTimer = autoTimer;
+    worker->type = wtype;
 
-    worker.SetUpWorker();
+    worker->SetUpWorker();
 
-     switch (worker.workerID)
-    {
-        case 1:
-            worker1 = worker;
-            break;
-        case 2:
-            worker2 = worker;
-            break;
-        case 3:
-            worker3 = worker;
-            break;
-        case 4:
-            worker4 = worker;
-            break;
-    }
+    Serial.println("WorkerID: " + String(worker->workerID));
+
+    workerList.add(worker->workerID-1, worker);
 
 }
 
 void oBee::HandleWorker(sensor oSensor, sensor_event oEvent)
 {
-    if (oSensor.workerID != -1) //Check if has a Worker asociated
+    if (oSensor.workerID != 0) //Check if has a Worker asociated
     {
-        int active = -1;
-        int workerAutoOff = 0;
+      //Serial.println("Worker: " + String(oSensor.workerID));
+      int active = -1;
+      int workerAutoOff = 0;
 
-        switch(oSensor.workerID){
-                case 1:
-                    workerAutoOff = worker1.autoTimer;
-                    break;
-                case 2:
-                    workerAutoOff = worker2.autoTimer;
-                    break;
-                case 3:
-                    workerAutoOff = worker3.autoTimer;
-                    break;
-                case 4:
-                    workerAutoOff = worker4.autoTimer;
-                    break;
-        }
+      Worker *worker = workerList.get(oSensor.workerID-1);
+      workerAutoOff = worker->autoTimer;
 
-        if(oEvent.triggerWorker)
-        {
-            active = 1;
-        }
-        else if (!oEvent.triggerWorker && workerAutoOff == 0) //if value is 0 -> OFF
-        {
-           active = 0;
-        }
+      if(oEvent.triggerWorker)
+      {
+          active = 1;
+          //Serial.println("Active 1");
+      }
+      else if (!oEvent.triggerWorker && workerAutoOff == 0) //if value is 0 -> OFF
+      {
+         active = 0;
+         //Serial.println("Active 0");
+      }
 
-        if (active == 1)
-        {
-          switch(oSensor.workerID){
-                  case 1:
-                      worker1.WorkerON();
-                      Serial.println("1");
-                      break;
-                  case 2:
-                      worker2.WorkerON();
-                      Serial.println("2");
-                      break;
-                  case 3:
-                      worker3.WorkerON();
-                      Serial.println("3");
-                      break;
-                  case 4:
-                      worker4.WorkerON();
-                      Serial.println("4");
-                      break;
-          }
-        }
-        else if(active == 0)
-        {
-            switch(oSensor.workerID)
-            {
-                case 1:
-                    worker1.WorkerOFF();
-                    break;
-                case 2:
-                    worker2.WorkerOFF();
-                    break;
-                case 3:
-                    worker3.WorkerOFF();
-                    break;
-                case 4:
-                    worker4.WorkerOFF();
-                    break;
-            }
-        }
-
-        //If active -1 -> Check AutoWorker
-        switch(oSensor.workerID)
-            {
-                case 1:
-                    worker1.AutoOffWorker();
-                    break;
-                case 2:
-                    worker2.AutoOffWorker();
-                    break;
-                case 3:
-                    worker3.AutoOffWorker();
-                    break;
-                case 4:
-                    worker4.AutoOffWorker();
-                    break;
-            }
-
+      if (active == 1)
+      {
+        //Serial.println("WorkerID_ON: " + String(worker->workerID));
+        worker->WorkerON();
+      }
+      else if(active == 0)
+      {
+          worker->WorkerOFF();
+      }
+      //If active -1 -> Check AutoWorker
+      worker->AutoOffWorker();
     }
-
-
 }
 
 void oBee::HandleNotification(sensor oSensor, sensor_event oEvent)
