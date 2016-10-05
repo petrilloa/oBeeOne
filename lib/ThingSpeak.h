@@ -601,6 +601,12 @@ class ThingSpeakClass
 		return OK_SUCCESS;
 	};
 
+  String getField(unsigned int field)
+  {
+    if(field < FIELDNUM_MIN || field > FIELDNUM_MAX) return String(ERR_INVALID_FIELD_NUM);
+
+    return nextWriteField[field - 1];
+  }
 
 	/**
 	 * @brief Set the latitude of a multi-field update.

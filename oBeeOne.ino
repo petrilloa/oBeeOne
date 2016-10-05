@@ -1,17 +1,19 @@
 
 #include "ThingSpeak.h"
+//#include "MQTT.h"
 #include "oBee.h"
 #include <ArduinoJson.h>
 
 oBee oBeeOne;
 /* Thingspeak */
-int myChannelNumber = 141202;
+int myChannelNumber = -1;
 //unsigned long channelNumber = 141202;
-
-String myWriteAPIKey = "L1UKP3FYTXHG69F2";
+String myWriteAPIKey = "my-write-api";
 //const char* charAPIKey = "L1UKP3FYTXHG69F2";
-
 TCPClient client;
+
+String losantWebHook = "losant-webhook";
+String losantDeviceId = "";
 
 double publishTime = 15000;
 
@@ -19,6 +21,14 @@ unsigned long ms;
 unsigned long msLast;
 
 int oBeeID = 1;
+
+typedef struct
+{
+  int fieldID;
+  float value;
+} fieldValue;
+
+LinkedList<fieldValue*> fieldList = LinkedList<fieldValue*>();
 
 
 /************Setup**************/
@@ -29,30 +39,17 @@ void setup() {
 
     delay(2000);
 
-    Particle.subscribe("hook-response/Firebase", FireBaseHandler, MY_DEVICES);
+    Particle.subscribe(System.deviceID() +"/hook-response/Firebase", FireBaseHandler, MY_DEVICES);
 
     Particle.variable("thingChannel", myChannelNumber);
     Particle.variable("thingWrite", myWriteAPIKey);
     Particle.variable("publishTime", publishTime);
+    Particle.variable("losantWeb", losantWebHook);
+    Particle.variable("losantDevId", losantDeviceId);
 
     Particle.function("rgbTrigger",TriggerRGBNotification);
     Particle.function("bzzTrigger",TriggeBzzrNotification);
 
-
-    //TODO: Eliminar esto, usar variable para GUARDAR y SETEAR los DATOS
-    //oBeeOne.SetUpDrone("ID:01-TYPE:SW-PIN1:D21-PIN2:00-BZZR:0-RGB:2-TIMER:20000-FIELDID:1-MODE:P-WID:01-WTIMER:3000");
-    //oBeeOne.SetUpDrone("ID:02-TYPE:SW-PIN1:A21-PIN2:00-BZZR:4-RGB:4-TIMER:20000-FIELDID:5-FIELDNAME:BigButton-MODE:P-WID:02-WTIMER:3000");
-
-    //Temperature
-    //oBeeOne.SetUpDrone("ID:03-TYPE:TEMP-PIN1:D11-PIN2:01-BZZR:0-RGB:0:TIMER:000-FIELDID:2-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:000");
-
-    //Presence
-    //oBeeOne.SetUpDrone("ID:04-TYPE:DIGITAL-PIN1:D32-PIN2:00-BZZR:0-RGB:1:TIMER:000-FIELDID:3-FIELDNAME:Presence-MODE:P-WID:00-WTIMER:000");
-    //Light
-    //oBeeOne.SetUpDrone("ID:05-TYPE:DIGITAL-PIN1:A22-PIN2:00-BZZR:0-RGB:0:TIMER:000-FIELDID:4-FIELDNAME:Light-MODE:T-WID:00-WTIMER:000");
-
-    //oBeeOne.SetUpWorker("ID:01-PIN:A11-BZZR:0-RGB:0-TYPE:A-TIMER:5000");
-    //oBeeOne.SetUpWorker("ID:02-PIN:A12-BZZR:0-RGB:0-TYPE:A-TIMER:5000");
 
     ms = 0;
     msLast = 0;
@@ -60,11 +57,11 @@ void setup() {
     //Start ThingSpeak
     ThingSpeak.begin(client);
 
+    //Start Losant
+
     //Obtener Device Name
     Particle.subscribe("spark/", DeviceHandler);
     Particle.publish("spark/device/name");
-
-
 }
 
 /******* Handler of Publish DEVICE Name********/
@@ -80,6 +77,7 @@ void DeviceHandler(const char *topic, const char *data) {
     //String data =  "{\"id\":\"1\"}";
     String dataFirebase = "{\"id\":\"" + String(oBeeID) + "\"}";
     Particle.publish("Firebase", dataFirebase, PRIVATE);
+
 }
 
 /******* Handler of FireBase********/
@@ -96,7 +94,6 @@ void FireBaseHandler(const char *event, const char *data) {
     //Agrego data al mensaje total
     fullMessage += String(data);
     return;
-
     //Salgo de la rutina y se vuelve a llamar hasta que se completa el mensaje
   }
 
@@ -123,6 +120,8 @@ void FireBaseHandler(const char *event, const char *data) {
 
   myChannelNumber = (int)oBeeJS["thingChannel"];
   myWriteAPIKey = oBeeJS["thingWrite"].asString();
+  losantWebHook = oBeeJS["particleWebHook"].asString();
+  losantDeviceId = oBeeJS["losantDeviceId"].asString();
 
   String strNode;
 
@@ -146,7 +145,6 @@ void FireBaseHandler(const char *event, const char *data) {
     }
   }
 }
-
 
 /*Public Function Particle API */
 /*******************************/
@@ -180,8 +178,6 @@ void loop() {
     //Publish to the cloud
     Publish();
 
-    //Serial.println("Loop ms:" + String(ms));
-
 }
 /*******************************/
 
@@ -211,8 +207,16 @@ void HandleDroneSwitch()
       droneSwitch->Publish(&oEvent);
 
       //GetValue
-      //Serial.println("SetField: " + String(oEvent.value));
+      //Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
       ThingSpeak.setField(oSensor.fieldID,oEvent.value);
+
+      //Add to collection - LOSANT
+      fieldValue *oValue = new fieldValue();
+
+      oValue->fieldID = oSensor.fieldID;
+      oValue->value = oEvent.value;
+
+      fieldList.add(oValue);
 
       //Losant
       //state[fieldName] = oEvent.value;
@@ -255,11 +259,17 @@ void HandleDroneDigital()
         droneDigital->Publish(&oEvent);
 
         //GetValue
-        //Serial.println("SetField: " + String(oEvent.value));
+        //Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
         ThingSpeak.setField(oSensor.fieldID,oEvent.value);
 
-        //Losant
-        //state[fieldName] = oEvent.value;
+        //Add to collection - LOSANT
+        fieldValue *oValue = new fieldValue();
+
+        oValue->fieldID = oSensor.fieldID;
+        oValue->value = oEvent.value;
+
+        fieldList.add(oValue);
+
     }
   }
 }
@@ -287,21 +297,31 @@ void HandleDroneTemperature()
         oBeeOne.HandleWorker(oSensor, oEvent);
         oBeeOne.HandleNotification(oSensor, oEvent);
 
-
         droneTemperature->Publish(&oEvent);
 
         //GetValue
-        //Serial.println("SetField: " + String(oEvent.value));
+        //Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
         ThingSpeak.setField(oSensor.fieldID,oEvent.value);
 
-        //Losant
-        //state[fieldName] = oEvent.value;
+        //Add to collection - LOSANT
+        fieldValue *oValue = new fieldValue();
+
+        oValue->fieldID = oSensor.fieldID;
+        oValue->value = oEvent.value;
+
+        fieldList.add(oValue);
+
         }
   }
 }
 
 /*********Publish to the cloud************/
 /*******************************/
+int randomNumber(int minVal, int maxVal)
+{
+  // int rand(void); included by default from newlib
+  return rand() % (maxVal-minVal+1) + minVal;
+}
 
 void Publish()
 {
@@ -315,8 +335,64 @@ void Publish()
 
         ThingSpeak.writeFields(channelNumber, charAPIKey);
 
-        //Test
-        //Particle.publish("losant", 15, PRIVATE);
+        //Test WebHook Losant
+        //String losantComand = "temperature\":\"" + String(randomNumber(15,31))+ "";
+        //String losantComand = "temperature\":\"15";
+
+        //Particle.publish("Losant", jsonString, PRIVATE);
+
+        //char publishString[256];
+        //sprintf(publishString,"{\"temp\": %i, \"door\": %i }",randomNumber(15,31), randomNumber(1,4));
+        //sprintf(publishString,"{\"status\": \"%i\", \"oBeeId\": \"" + losantDeviceId + "\", \"field-1\": %i, \"field-2\": %i, \"field-3\": %i, \"field-4\": %i, \"field-5\": %i, \"field-6\": %i, \"field-7\": %i, \"field-8\": %i, \"field-9\": %i, \"field-10\": %i}",1, randomNumber(0,4),randomNumber(19,27),randomNumber(0,1),randomNumber(0,1),randomNumber(0,7),0,0,0,0,0 );
+
+
+        //Particle.publish(losantWebHook,publishString , PRIVATE);
+
+        // Build the json payload: { "data" : { "temp" : val }}
+
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject& root = jsonBuffer.createObject();
+
+
+        //TODO: Ver como usar el status
+        root["status"] = 1;
+        root["oBeeId"] = losantDeviceId.c_str();
+
+        root["field-1"] = "";
+        root["field-2"] = "";
+        root["field-3"] = "";
+        root["field-4"] = "";
+        root["field-5"] = "";
+        root["field-6"] = "";
+        root["field-7"] = "";
+        root["field-8"] = "";
+        root["field-9"] = "";
+        root["field-10"] = "";
+
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+          //Serial.println("field-" + String(i) + ": " +  String(fieldList.get(i)));
+          fieldValue *oValue = fieldList.get(i);
+
+          root["field-" + String(oValue->fieldID)] = oValue->value;
+
+          //Delete object from Memory
+          delete oValue;
+
+          //Serial.println("Field: " + String(i));
+        }
+
+        // Get JSON string.
+        char buffer[256];
+        //root.printTo(Serial);
+        root.printTo(buffer, sizeof(buffer));
+        //Serial.println("---------------");
+
+        Particle.publish(losantWebHook, buffer , PRIVATE);
+
+        //Clear the values
+        fieldList.clear();
+
 
     }
 }

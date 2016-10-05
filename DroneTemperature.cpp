@@ -67,7 +67,7 @@ void DroneTemperature::GetEvent(sensor_event *oEvent)
     /* Clear the event */
     memset(oEvent, 0, sizeof(sensor_event));
 
-    Serial.println("GetEventTemp_1");
+    //Serial.println("GetEventTemp_1");
     //Read the sensor to get Value and Times
     float tempTemporal =  read();
 
@@ -120,7 +120,7 @@ float DroneTemperature::read()
     //TODO: Manejar el indexOf
     temperature=dallasTemp.getTempCByIndex(_sensor.pin2);
 
-    Serial.println("Temperature: " + String(temperature));
+    //Serial.println("Temperature: " + String(temperature));
     return temperature;
 
 }

@@ -10,7 +10,7 @@ void Worker::SetUpWorker()
 
 void Worker::WorkerON()
 {
-    Serial.println("WorkerON:" + String(workerID));
+    //Serial.println("WorkerON:" + String(workerID));
     value = HIGH;
 
     //Worker ON TIME
