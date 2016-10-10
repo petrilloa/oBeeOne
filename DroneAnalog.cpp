@@ -1,10 +1,10 @@
-#include "DroneDigital.h"
+#include "DroneAnalog.h"
 
-DroneDigital::DroneDigital()
+DroneAnalog::DroneAnalog()
 {
     }
 
-void DroneDigital::SetUpSensor(sensor oSensor)
+void DroneAnalog::SetUpSensor(sensor oSensor)
 {
     _sensor.droneID = oSensor.droneID;
     _sensor.type = oSensor.type;
@@ -23,13 +23,13 @@ void DroneDigital::SetUpSensor(sensor oSensor)
 
     _sensor_event.timestamp = millis();
     _sensor_event.lastChange = _sensor_event.timestamp;
-    _sensor_event.value = _sensor.inverted ? 1:0;
+    _sensor_event.value = 0;
     _sensor_event.lastValue = _sensor_event.value;
     _sensor_event.changed = false;
 
 }
 
-void DroneDigital::GetSensor(sensor *oSensor)
+void DroneAnalog::GetSensor(sensor *oSensor)
 {
     /* Clear the event */
     //Serial.println("Digital Get Sensor 1");
@@ -53,7 +53,7 @@ void DroneDigital::GetSensor(sensor *oSensor)
 
 }
 
-void DroneDigital::GetEvent(sensor_event *oEvent)
+void DroneAnalog::GetEvent(sensor_event *oEvent)
 {
     /* Clear the event */
     memset(oEvent, 0, sizeof(sensor_event));
@@ -96,19 +96,18 @@ void DroneDigital::GetEvent(sensor_event *oEvent)
 
 }
 
-float DroneDigital::read()
+float DroneAnalog::read()
 {
     static int ms;
     static int pinVal;
 
-    //Serial.println("Digital: Start reading...");
+    //Serial.println("Analog: Start reading...");
 
     ms = millis();
-    pinVal = digitalRead(_sensor.pin);
+    pinVal = analogRead(_sensor.pin);
 
-    //Serial.println("Digital: " + String(_sensor.droneID));
+    //Serial.println("Analog: " + String(_sensor.droneID));
     //Serial.println("PINVal: " + String(pinVal));
-    //delay(500);
 
     if(ms-_sensor_event.lastChange < _dbTime) //if TRUE is en Debounce time
     {
@@ -120,20 +119,8 @@ float DroneDigital::read()
     else //is FALSE -> read value to return
     {
         _sensor_event.lastValue = _sensor_event.value;
-        if(pinVal == HIGH )
-        {
-            _sensor_event.value = _sensor.inverted ? 0:1;
-            //Serial.println("Value HIGH ");
-            //Serial.println("Inverted: " + String(_sensor.inverted));
-            //delay(500);
-        }
-        else
-        {
-          _sensor_event.value = _sensor.inverted ? 1:0;
-          //Serial.println("Value LOW ");
-          //Serial.println("Inverted: " + String(_sensor.inverted));
-          //delay(500);
-        }
+
+        _sensor_event.value = pinVal;
 
         _sensor_event.timestamp = ms;
 
@@ -154,25 +141,27 @@ float DroneDigital::read()
 
 }
 
-int DroneDigital::wasActive(void)
+//TODO: Revisar
+int DroneAnalog::wasActive(void)
 {
     return _sensor_event.value == 1 && _sensor_event.changed;
 }
 
-int DroneDigital::activeFor(int ms)
+int DroneAnalog::activeFor(int ms)
 {
     return (_sensor_event.value == 1 && _sensor_event.timestamp - _sensor_event.lastChange >= ms) ? 1 : 0;
 }
 
-void DroneDigital::Publish(sensor_event *oEvent)
+//TODO: Revisar
+void DroneAnalog::Publish(sensor_event *oEvent)
 {
     //TODO: CHECK!!!
-    if(_sensor.mode == SENSOR_MODE_PULSE)
-        oEvent->value = _sensor_event.acumulatedValue;
-    else
+    //if(_sensor.mode == SENSOR_MODE_PULSE)
+    //      oEvent->value = _sensor_event.acumulatedValue;
+    //else
         oEvent->value = _sensor_event.value;
 
     //Clean acumulatedValue - Only if is not Active
-    if(_sensor_event.value == 0)
-        _sensor_event.acumulatedValue = 0;
+    //if(_sensor_event.value == 0)
+    //    _sensor_event.acumulatedValue = 0;
 }

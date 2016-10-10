@@ -3,6 +3,8 @@
 #include "DroneSwitch.h"
 #include "DroneTemperature.h"
 #include "DroneDigital.h"
+#include "DroneAnalog.h"
+#include "DroneAmbientTemp.h"
 
 #include "oBeeRGB.h"
 #include "oBeeSound.h"
@@ -26,6 +28,9 @@ const int PIN_A11 = A0;
 const int PIN_A12 = A1;
 const int PIN_A21 = A2;
 const int PIN_A22 = A3;
+const int AUX_0 = 0;
+const int AUX_1 = 1;
+const int AUX_2 = 2;
 
 const int N_PIXELS = 3;
 
@@ -44,12 +49,16 @@ class oBee
         void SetUpDroneSwitch(sensor oSensor);
         void SetUpDroneTemperature(sensor oSensor);
         void SetUpDroneDigital(sensor oSensor);
+        void SetUpDroneAnalog(sensor oSensor);
+        void SetUpDroneAmbientTemp(sensor oSensor);
 
         void ClearLists();
 
         LinkedList<DroneSwitch*> droneSwitchList = LinkedList<DroneSwitch*>();
         LinkedList<DroneTemperature*> droneTemperatureList = LinkedList<DroneTemperature*>();
         LinkedList<DroneDigital*> droneDigitalList = LinkedList<DroneDigital*>();
+        LinkedList<DroneAnalog*> droneAnalogList = LinkedList<DroneAnalog*>();
+        LinkedList<DroneAmbientTemp*> droneAmbientTempList = LinkedList<DroneAmbientTemp*>();
 
         //DronePresence;
         //DroneLight;

@@ -1,14 +1,14 @@
-/* DroneDigital.h */
+/* DroneAnalog.h */
 #include "Drone.h"
 
 
-#ifndef _dronedigital_h
-#define _dronedigital_h
+#ifndef _droneanalog_h
+#define _droneanalog_h
 
-class DroneDigital : public Drone
+class DroneAnalog : public Drone
 {
     public:
-        DroneDigital();
+        DroneAnalog();
 
         virtual void SetUpSensor(sensor);
         virtual void GetEvent(sensor_event*);

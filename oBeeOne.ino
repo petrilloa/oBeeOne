@@ -67,7 +67,7 @@ void setup() {
 /******* Handler of Publish DEVICE Name********/
 void DeviceHandler(const char *topic, const char *data) {
     Serial.println("received " + String(topic) + ": " + String(data));
-    delay(1000);
+    //delay(1000);
     //TODO: Obtener ID del NOMBRE! oBee_xxx
     oBeeID = String(data).substring(5).toInt();
 
@@ -96,10 +96,14 @@ void FireBaseHandler(const char *event, const char *data) {
     return;
     //Salgo de la rutina y se vuelve a llamar hasta que se completa el mensaje
   }
+  else{
+    //Completo el mensaje
+    fullMessage += String(data);
+    Serial.println("FullMessage: " + fullMessage);
+  }
 
-  //Completo el mensaje
-  fullMessage += String(data);
-  Serial.println(fullMessage);
+
+
 
   StaticJsonBuffer<2048> jsonBuffer;
   //char *dataCopy = strdup(data);
@@ -122,6 +126,8 @@ void FireBaseHandler(const char *event, const char *data) {
   myWriteAPIKey = oBeeJS["thingWrite"].asString();
   losantWebHook = oBeeJS["particleWebHook"].asString();
   losantDeviceId = oBeeJS["losantDeviceId"].asString();
+
+  Serial.println("LosantDeviceID: " + losantDeviceId);
 
   String strNode;
 
@@ -173,7 +179,9 @@ void loop() {
 
     HandleDroneSwitch();
     HandleDroneDigital();
+    HandleDroneAnalog();
     HandleDroneTemperature();
+    HandleDroneAmbientTemp();
 
     //Publish to the cloud
     Publish();
@@ -207,7 +215,7 @@ void HandleDroneSwitch()
       droneSwitch->Publish(&oEvent);
 
       //GetValue
-      //Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
+      Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
       ThingSpeak.setField(oSensor.fieldID,oEvent.value);
 
       //Add to collection - LOSANT
@@ -259,7 +267,63 @@ void HandleDroneDigital()
         droneDigital->Publish(&oEvent);
 
         //GetValue
-        //Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
+        Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
+        ThingSpeak.setField(oSensor.fieldID,oEvent.value);
+
+        //Add to collection - LOSANT
+        fieldValue *oValue = new fieldValue();
+
+        oValue->fieldID = oSensor.fieldID;
+        oValue->value = oEvent.value;
+
+        fieldList.add(oValue);
+
+    }
+  }
+}
+
+void HandleDroneAnalog()
+{
+  sensor oSensor;
+  sensor_event oEvent;
+
+  //Serial.println("1");
+  //delay(500);
+
+  int listSize = oBeeOne.droneAnalogList.size();
+
+  //Serial.println("listSize: " + String(listSize));
+  //Serial.println("2");
+  //delay(500);
+
+  for (int h = 0; h < listSize; h++)
+  {
+  DroneAnalog *droneAnalog;
+
+  //Serial.println("GetDrone: " + String(h));
+  //delay(500);
+  droneAnalog = oBeeOne.droneAnalogList.get(h);
+
+  //Serial.println("3");
+  //delay(500);
+  droneAnalog->GetSensor(&oSensor);
+  //Serial.println("4");
+  //delay(500);
+  droneAnalog->GetEvent(&oEvent);
+  //Serial.println("5");
+  //delay(500);
+
+  oBeeOne.HandleWorker(oSensor, oEvent);
+  oBeeOne.HandleNotification(oSensor, oEvent);
+  //Serial.println("6");
+
+  //IF Publish time
+    if(ms - msLast > publishTime)
+    {
+        droneAnalog->Publish(&oEvent);
+
+        //GetValue
+        Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
         ThingSpeak.setField(oSensor.fieldID,oEvent.value);
 
         //Add to collection - LOSANT
@@ -300,7 +364,7 @@ void HandleDroneTemperature()
         droneTemperature->Publish(&oEvent);
 
         //GetValue
-        //Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
+        Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
         ThingSpeak.setField(oSensor.fieldID,oEvent.value);
 
         //Add to collection - LOSANT
@@ -314,6 +378,48 @@ void HandleDroneTemperature()
         }
   }
 }
+
+void HandleDroneAmbientTemp()
+{
+  sensor oSensor;
+  sensor_event oEvent;
+
+  int listSize = oBeeOne.droneAmbientTempList.size();
+
+  for (int h = 0; h < listSize; h++)
+  {
+    //IF Publish time - FOR TEMPERATURE ONLY WHEN PUBLISH! Evitar saturar el BUS -
+    //Testear con varios sensores...
+      if(ms - msLast > publishTime)
+      {
+        DroneAmbientTemp *droneAmbientTemp;
+
+        droneAmbientTemp = oBeeOne.droneAmbientTempList.get(h);
+
+        droneAmbientTemp->GetSensor(&oSensor);
+        droneAmbientTemp->GetEvent(&oEvent);
+
+        oBeeOne.HandleWorker(oSensor, oEvent);
+        oBeeOne.HandleNotification(oSensor, oEvent);
+
+        droneAmbientTemp->Publish(&oEvent);
+
+        //GetValue
+        Serial.println("SetField-" + String(oSensor.fieldID) + ": "+ String(oEvent.value));
+        ThingSpeak.setField(oSensor.fieldID,oEvent.value);
+
+        //Add to collection - LOSANT
+        fieldValue *oValue = new fieldValue();
+
+        oValue->fieldID = oSensor.fieldID;
+        oValue->value = oEvent.value;
+
+        fieldList.add(oValue);
+
+        }
+  }
+}
+
 
 /*********Publish to the cloud************/
 /*******************************/
@@ -350,7 +456,7 @@ void Publish()
 
         // Build the json payload: { "data" : { "temp" : val }}
 
-        StaticJsonBuffer<256> jsonBuffer;
+        StaticJsonBuffer<1024> jsonBuffer;
         JsonObject& root = jsonBuffer.createObject();
 
 
@@ -376,17 +482,19 @@ void Publish()
 
           root["field-" + String(oValue->fieldID)] = oValue->value;
 
+          Serial.println("Field: " + String(oValue->fieldID) + " Value: " + String(oValue->value));
+
           //Delete object from Memory
           delete oValue;
 
-          //Serial.println("Field: " + String(i));
+
         }
 
         // Get JSON string.
-        char buffer[256];
-        //root.printTo(Serial);
+        char buffer[1024];
+        root.printTo(Serial);
         root.printTo(buffer, sizeof(buffer));
-        //Serial.println("---------------");
+        Serial.println("---------------");
 
         Particle.publish(losantWebHook, buffer , PRIVATE);
 

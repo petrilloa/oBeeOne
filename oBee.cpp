@@ -36,7 +36,7 @@ void oBee::SetUpDrone(String str)
     Serial.println("SetupDrone-DETAIL");
     Serial.println("FULL:" + str);
 
-    //SetupDrone("ID:00-TYPE:SW-PIN1:D21-PIN2:000-BZZR:2-RGB:2-TIMER:1000-FIELDID:1-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:2000");
+    //SetupDrone("ID:00-TYPE:SW-PIN1:D21-PIN2:000-BZZR:2-RGB:2-TIMER:1000-FIELDID:1-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:2000-INVERTED:1");
 
     int posID = str.indexOf("ID:");
     int posType = str.indexOf("-TYPE:");
@@ -50,6 +50,7 @@ void oBee::SetUpDrone(String str)
     int posMode = str.indexOf("-MODE:");
     int posWorkerID = str.indexOf("-WID:");
     int posWTimer = str.indexOf("-WTIMER:");
+    int posInverted = str.indexOf("-INVERTED:");
 
     String strId = str.substring (posID+3, posType);   // get 01
     //Serial.println("SetupDrone-ID:" + strId );
@@ -84,8 +85,11 @@ void oBee::SetUpDrone(String str)
     String strWID = str.substring (posWorkerID+5, posWTimer);
     Serial.println("SetupDrone-WORKERID:" + strWID);
 
-    String strWTimer = str.substring (posWTimer+8);
+    String strWTimer = str.substring (posWTimer+8, posInverted);
     Serial.println("SetupDrone-WORKERTIME:" + strWTimer);
+
+    String strInverted = str.substring (posInverted+10);
+    Serial.println("SetupDrone-INVERTED:" + strInverted);
 
 
     int droneID = strId.toInt();
@@ -97,6 +101,7 @@ void oBee::SetUpDrone(String str)
     int notificationTime = strTimer.toInt();
     int workerID = strWID.toInt();
     int workerTimer = strWTimer.toInt();
+    int inverted = strInverted.toInt();
 
 
     sensor_type dtype = SENSOR_TYPE_SWITCH;
@@ -112,6 +117,14 @@ void oBee::SetUpDrone(String str)
     else if (strType == "DIGITAL")
     {
         dtype = SENSOR_TYPE_DIGITAL;
+    }
+    else if (strType == "ANALOG")
+    {
+        dtype = SENSOR_TYPE_ANALOG;
+    }
+    else if (strType == "AMBIENTTEMP")
+    {
+        dtype = SENSOR_TYPE_AMBIENT_TEMP;
     }
 
     //TODO: droneMode dmode = dmPULSE;
@@ -141,6 +154,18 @@ void oBee::SetUpDrone(String str)
     oSensor.workerID = workerID;
     oSensor.workerElapsedTime = workerTimer;
 
+    if(inverted == 1)
+    {
+      oSensor.inverted = true;
+      Serial.println("Inverted TRUE: " + String(oSensor.inverted));
+    }
+    else
+    {
+      oSensor.inverted = false;
+      Serial.println("Inverted FALSE: " + String(oSensor.inverted));
+    }
+
+
     Serial.println("SensorPIN: " + String(pin1));
 
     switch (oSensor.type)
@@ -153,6 +178,12 @@ void oBee::SetUpDrone(String str)
             break;
         case SENSOR_TYPE_DIGITAL:
             SetUpDroneDigital(oSensor);
+            break;
+        case SENSOR_TYPE_ANALOG:
+            SetUpDroneAnalog(oSensor);
+            break;
+        case SENSOR_TYPE_AMBIENT_TEMP:
+            SetUpDroneAmbientTemp(oSensor);
             break;
     }
 
@@ -183,12 +214,29 @@ void oBee::SetUpDroneDigital(sensor oSensor)
   droneDigitalList.add(oDroneDigital);
 }
 
+void oBee::SetUpDroneAnalog(sensor oSensor)
+{
+  DroneAnalog *oDroneAnalog = new DroneAnalog();
+  oDroneAnalog->SetUpSensor(oSensor);
+  droneAnalogList.add(oDroneAnalog);
+}
+
+void oBee::SetUpDroneAmbientTemp(sensor oSensor)
+{
+  DroneAmbientTemp *oDroneAmbientTemp = new DroneAmbientTemp();
+  oDroneAmbientTemp->SetUpSensor(oSensor);
+  droneAmbientTempList.add(oDroneAmbientTemp);
+}
+
+
 void oBee::ClearLists()
 {
   //Clear list to initial SetUp
   droneSwitchList.clear();
   droneTemperatureList.clear();
   droneDigitalList.clear();
+  droneAnalogList.clear();
+  droneAmbientTempList.clear();
   workerList.clear();
 }
 
@@ -216,6 +264,12 @@ int oBee::GetPinValue(String strPIN)
         pinValue = PIN_A21;
     else if (strPIN == "A22")
         pinValue = PIN_A22;
+    else if (strPIN == "AUX0")
+            pinValue = AUX_0;
+    else if (strPIN == "AUX1")
+            pinValue = AUX_1;
+    else if (strPIN == "AUX2")
+            pinValue = AUX_2;
 
 
     return pinValue;

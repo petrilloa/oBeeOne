@@ -22,6 +22,7 @@ typedef struct
 
     bool triggerNotification;   //If must trigger a Notification
     bool triggerWorker;         //If must trigger a Worker
+
 } sensor_event;
 
 typedef struct
@@ -40,13 +41,16 @@ typedef struct
 
     int workerID = -1;                   /**< Asociated with a Worker */
     int workerElapsedTime = 0;          /**< WorkerDelayedTime */
+    bool inverted;              //If triggers on HIGH or LOW value
 } sensor;
 
 typedef enum
 {
     SENSOR_TYPE_SWITCH      = (1),
     SENSOR_TYPE_TEMP        = (2),
-    SENSOR_TYPE_DIGITAL     = (3)
+    SENSOR_TYPE_DIGITAL     = (3),
+    SENSOR_TYPE_ANALOG      = (4),
+    SENSOR_TYPE_AMBIENT_TEMP= (5)
 } sensor_type;
 
 

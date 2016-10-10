@@ -1,20 +1,21 @@
+
+#include <Adafruit_DHT.h>
 /* DroneDigital.h */
 #include "Drone.h"
 
 
-#ifndef _dronedigital_h
-#define _dronedigital_h
+#ifndef _droneambienttemp_h
+#define _droneambienttemp_h
 
-class DroneDigital : public Drone
+class DroneAmbientTemp : public Drone
 {
     public:
-        DroneDigital();
+        DroneAmbientTemp();
 
         virtual void SetUpSensor(sensor);
         virtual void GetEvent(sensor_event*);
         virtual void GetSensor(sensor*);
         virtual void Publish(sensor_event*);
-
 
     private:
 
@@ -26,7 +27,7 @@ class DroneDigital : public Drone
         int wasActive();
         int activeFor(int ms);
 
-
+        DHT dhtSensor;
 };
 
 #endif
