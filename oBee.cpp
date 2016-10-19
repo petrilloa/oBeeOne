@@ -36,7 +36,7 @@ void oBee::SetUpDrone(String str)
     Serial.println("SetupDrone-DETAIL");
     Serial.println("FULL:" + str);
 
-    //SetupDrone("ID:00-TYPE:SW-PIN1:D21-PIN2:000-BZZR:2-RGB:2-TIMER:1000-FIELDID:1-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:2000-INVERTED:1");
+    //SetupDrone("ID:00-TYPE:SW-PIN1:D21-PIN2:000-BZZR:2-RGB:2-TIMER:1000-FIELDID:1-FIELDNAME:Temperature-MODE:P-WID:00-WTIMER:2000-INVERTED:1-NOTFIELD:5");
 
     int posID = str.indexOf("ID:");
     int posType = str.indexOf("-TYPE:");
@@ -51,6 +51,7 @@ void oBee::SetUpDrone(String str)
     int posWorkerID = str.indexOf("-WID:");
     int posWTimer = str.indexOf("-WTIMER:");
     int posInverted = str.indexOf("-INVERTED:");
+    int posNotification = str.indexOf("-NOTFIELD:");
 
     String strId = str.substring (posID+3, posType);   // get 01
     //Serial.println("SetupDrone-ID:" + strId );
@@ -88,8 +89,11 @@ void oBee::SetUpDrone(String str)
     String strWTimer = str.substring (posWTimer+8, posInverted);
     Serial.println("SetupDrone-WORKERTIME:" + strWTimer);
 
-    String strInverted = str.substring (posInverted+10);
+    String strInverted = str.substring (posInverted+10, posNotification);
     Serial.println("SetupDrone-INVERTED:" + strInverted);
+
+    String strNotification = str.substring (posNotification+10);
+    Serial.println("SetupDrone-NOTIFICATION:" + strNotification);
 
 
     int droneID = strId.toInt();
@@ -102,6 +106,7 @@ void oBee::SetUpDrone(String str)
     int workerID = strWID.toInt();
     int workerTimer = strWTimer.toInt();
     int inverted = strInverted.toInt();
+    int notificationfieldID = strNotification.toInt();
 
 
     sensor_type dtype = SENSOR_TYPE_SWITCH;
@@ -164,6 +169,8 @@ void oBee::SetUpDrone(String str)
       oSensor.inverted = false;
       Serial.println("Inverted FALSE: " + String(oSensor.inverted));
     }
+
+    oSensor.notificationFieldID = notificationfieldID;
 
 
     Serial.println("SensorPIN: " + String(pin1));

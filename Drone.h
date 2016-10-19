@@ -22,6 +22,7 @@ typedef struct
 
     bool triggerNotification;   //If must trigger a Notification
     bool triggerWorker;         //If must trigger a Worker
+    float acumulatedNotification; //Number of times Notification has fired
 
 } sensor_event;
 
@@ -37,6 +38,7 @@ typedef struct
 
     int fieldID;                    /**< Thingspeak field */
     //String fieldName;               /** Losant field*/
+    int notificationFieldID;
     sensor_mode mode;                /**< Pulse or Time Sensor*/
 
     int workerID = -1;                   /**< Asociated with a Worker */

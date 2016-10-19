@@ -18,6 +18,7 @@ void DroneSwitch::SetUpSensor(sensor oSensor)
     _sensor.mode = oSensor.mode;
     _sensor.workerID = oSensor.workerID;
     _sensor.workerElapsedTime = oSensor.workerElapsedTime;
+    _sensor.notificationFieldID = oSensor.notificationFieldID;
 
     pinMode(_sensor.pin, INPUT_PULLUP);
 
@@ -26,6 +27,8 @@ void DroneSwitch::SetUpSensor(sensor oSensor)
     _sensor_event.value = 0;
     _sensor_event.lastValue = _sensor_event.value;
     _sensor_event.changed = false;
+
+    _sensor_event.acumulatedNotification = 0;
 
 }
 
@@ -46,6 +49,7 @@ void DroneSwitch::GetSensor(sensor *oSensor)
     oSensor->mode = _sensor.mode;
     oSensor->workerID = _sensor.workerID;
     oSensor->workerElapsedTime = _sensor.workerElapsedTime;
+    oSensor->notificationFieldID = _sensor.notificationFieldID;
 
 }
 
@@ -64,7 +68,16 @@ void DroneSwitch::GetEvent(sensor_event *oEvent)
     //TODO:
     //Check notification
     if(activeFor(_sensor.notificationElapsedTime))
-        _sensor_event.triggerNotification = true;
+    {
+      _sensor_event.triggerNotification = true;
+
+      if (!_sensor_event.changed)
+        _sensor_event.acumulatedNotification = 1;
+      else
+        _sensor_event.acumulatedNotification = _sensor_event.acumulatedNotification + 1;
+
+    }
+
     else
         _sensor_event.triggerNotification = false;
 
@@ -84,6 +97,7 @@ void DroneSwitch::GetEvent(sensor_event *oEvent)
     oEvent->lastChange = _sensor_event.lastChange;
     oEvent->triggerNotification = _sensor_event.triggerNotification;
     oEvent->triggerWorker = _sensor_event.triggerWorker;
+    oEvent->acumulatedNotification = _sensor_event.acumulatedNotification;
 
     //Serial.println("_Event value: " + String(_sensor_event.value));
     //Serial.println("_Event acumulated: " + String(_sensor_event.acumulatedValue));
@@ -149,7 +163,16 @@ void DroneSwitch::Publish(sensor_event *oEvent)
     else
         oEvent->value = _sensor_event.value;
 
+    Serial.println("Notification 3: " + String(_sensor_event.acumulatedNotification));
+
+    oEvent->acumulatedNotification = _sensor_event.acumulatedNotification;
+
+    Serial.println("Notification 4: " + String(oEvent->acumulatedNotification));
+
     //Clean acumulatedValue - Only if is not Active
     if(_sensor_event.value == 0)
         _sensor_event.acumulatedValue = 0;
+
+    //Clean acumulatedNotification
+    _sensor_event.acumulatedNotification = 0;
 }

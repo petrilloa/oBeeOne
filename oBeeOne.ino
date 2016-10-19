@@ -226,6 +226,20 @@ void HandleDroneSwitch()
 
       fieldList.add(oValue);
 
+      //Check notification publish
+      if(oSensor.notificationFieldID != 0)
+      {
+        //Add to collection - LOSANT
+        fieldValue *oValue = new fieldValue();
+
+        oValue->fieldID = oSensor.notificationFieldID;
+        oValue->value = oEvent.acumulatedNotification;
+
+        fieldList.add(oValue);
+
+        ThingSpeak.setField(oSensor.notificationFieldID,oEvent.acumulatedNotification);
+      }
+
       //Losant
       //state[fieldName] = oEvent.value;
   }
@@ -277,6 +291,20 @@ void HandleDroneDigital()
         oValue->value = oEvent.value;
 
         fieldList.add(oValue);
+
+        //Check notification publish
+        if(oSensor.notificationFieldID != 0)
+        {
+          //Add to collection - LOSANT
+          fieldValue *oValue = new fieldValue();
+
+          oValue->fieldID = oSensor.notificationFieldID;
+          oValue->value = oEvent.acumulatedNotification;
+
+          fieldList.add(oValue);
+
+          ThingSpeak.setField(oSensor.notificationFieldID,oEvent.acumulatedNotification);
+        }
 
     }
   }
