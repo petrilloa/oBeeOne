@@ -124,7 +124,7 @@ void oBeeRGB::TheaterChase(uint32_t color1, uint32_t color2, uint8_t interval, d
 {
     ActivePattern = THEATER_CHASE;
     Interval = interval;
-    TotalSteps = 30;
+    TotalSteps = 150;
     Color1 = color1;
     Color2 = color2;
     Index = 0;

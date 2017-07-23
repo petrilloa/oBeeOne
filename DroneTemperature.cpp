@@ -71,7 +71,7 @@ void DroneTemperature::GetEvent(sensor_event *oEvent)
     //Read the sensor to get Value and Times
     float tempTemporal =  read();
 
-    //Read error
+    //Read error - if -127 set LAST valid value.
     if (tempTemporal != -127)
       _sensor_event.value = tempTemporal;
     else
@@ -104,6 +104,8 @@ void DroneTemperature::GetEvent(sensor_event *oEvent)
     //Serial.println("_Event value: " + String(_sensor_event.value));
     //Serial.println("_Event acumulated: " + String(_sensor_event.acumulatedValue));
 
+    //Set lastValue
+    _sensor_event.lastValue = _sensor_event.value;
 
 }
 

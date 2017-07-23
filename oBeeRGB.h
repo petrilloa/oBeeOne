@@ -1,7 +1,7 @@
 /* oBeeRGB.h */
 
 // This #include statement was automatically added by the Particle IDE.
-#include <neopixel.h>
+#include "neopixel.h"
 
 #ifndef _oBeeRGB_h
 #define _oBeeRGB_h

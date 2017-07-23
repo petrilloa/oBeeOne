@@ -2,7 +2,7 @@
 #include "ThingSpeak.h"
 //#include "MQTT.h"
 #include "oBee.h"
-#include <ArduinoJson.h>
+#include "ArduinoJson.h"
 
 oBee oBeeOne;
 /* Thingspeak */
@@ -37,7 +37,11 @@ void setup() {
 
     Serial.begin(19200);
 
-    delay(2000);
+    //delay(2000);
+    while (!Spark.connected()) {
+    Serial.print("+"); delay(100);
+    }
+
 
     Particle.subscribe(System.deviceID() +"/hook-response/Firebase", FireBaseHandler, MY_DEVICES);
 
@@ -81,24 +85,41 @@ void DeviceHandler(const char *topic, const char *data) {
 }
 
 /******* Handler of FireBase********/
+String strStart = "{\"oBee";
 String strEnd = "}}";
 String fullMessage;
 
 void FireBaseHandler(const char *event, const char *data) {
   // Handle the webhook response
+  Serial.println("***********FireBaseHandler***********");
   Serial.println(String(data));
 
   //Test if final data
-  if (!String(data).endsWith(strEnd))
+  if (String(data).startsWith(strStart))
+  {
+    fullMessage = String(data);
+    Serial.println("***********START***********");
+
+    //Si no termina, salir y esperar el resto
+    if(!String(data).endsWith(strEnd))
+    {
+      Serial.println("***********START AND END***********");
+      return;
+    }
+  }
+  else if (!String(data).endsWith(strEnd))
   {
     //Agrego data al mensaje total
     fullMessage += String(data);
+    Serial.println("***********LOOP***********");
     return;
     //Salgo de la rutina y se vuelve a llamar hasta que se completa el mensaje
   }
   else{
     //Completo el mensaje
     fullMessage += String(data);
+    Serial.println("***********END***********");
+
     Serial.println("FullMessage: " + fullMessage);
   }
 
@@ -461,13 +482,13 @@ void Publish()
 {
     if(ms - msLast > publishTime)
     {
-
         msLast = ms;
 
-        const char* charAPIKey = myWriteAPIKey.c_str();
-        unsigned long channelNumber = myChannelNumber;
+        //TODO: quitar ThingSpeak
+        //const char* charAPIKey = myWriteAPIKey.c_str();
+        //unsigned long channelNumber = myChannelNumber;
 
-        ThingSpeak.writeFields(channelNumber, charAPIKey);
+        //ThingSpeak.writeFields(channelNumber, charAPIKey);
 
         //Test WebHook Losant
         //String losantComand = "temperature\":\"" + String(randomNumber(15,31))+ "";

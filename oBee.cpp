@@ -277,6 +277,8 @@ int oBee::GetPinValue(String strPIN)
             pinValue = AUX_1;
     else if (strPIN == "AUX2")
             pinValue = AUX_2;
+    else
+            pinValue = strPIN.toInt();
 
 
     return pinValue;

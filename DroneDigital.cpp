@@ -19,6 +19,7 @@ void DroneDigital::SetUpSensor(sensor oSensor)
     _sensor.workerID = oSensor.workerID;
     _sensor.workerElapsedTime = oSensor.workerElapsedTime;
     _sensor.notificationFieldID = oSensor.notificationFieldID;
+    _sensor.inverted = oSensor.inverted;
 
     pinMode(_sensor.pin, INPUT);
 
@@ -52,6 +53,7 @@ void DroneDigital::GetSensor(sensor *oSensor)
     oSensor->workerID = _sensor.workerID;
     oSensor->workerElapsedTime = _sensor.workerElapsedTime;
     oSensor->notificationFieldID = _sensor.notificationFieldID;
+    oSensor->inverted = _sensor.inverted;
 
     //Serial.println("Digital Get Sensor 2");
 

@@ -10,7 +10,7 @@
 #include "oBeeSound.h"
 #include "Worker.h"
 
-#include <LinkedList.h>
+#include "LinkedList.h"
 
 #ifndef _oBee_h
 #define _oBee_h
